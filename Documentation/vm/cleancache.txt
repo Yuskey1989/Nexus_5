@@ -230,7 +230,7 @@ Some points for a filesystem to consider:
 - The FS must call the VFS superblock alloc and deactivate routines
   or add hooks to do the equivalent cleancache calls done there.
 - To maximize performance, all pages fetched from the FS should
-  go through the do_mpag_readpage routine or the FS should add
+  go through the do_mpage_readpage routine or the FS should add
   hooks to do the equivalent (cf. btrfs)
 - Currently, the FS blocksize must be the same as PAGESIZE.  This
   is not an architectural restriction, but no backends currently
