@@ -1957,6 +1957,12 @@ config TURBO_BOOST
 	  than stock maximum.  When more than 2 cores are active, the clock
 	  is limited to stock max speeds
 
+config CPU_UNDERCLOCK
+	bool "Enable CPU Underclocking option"
+	default n
+	help
+	  Krait underclocking
+
 config MSM_AVS_HW
 	bool "Enable Adaptive Voltage Scaling (AVS)"
 	default n
