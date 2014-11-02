@@ -55,6 +55,9 @@ static struct workqueue_struct *intelliplug_boost_wq;
 static unsigned int intelli_plug_active = 0;
 module_param(intelli_plug_active, uint, 0644);
 
+static unsigned int min_active_cores = 0;
+module_param(min_active_cores, uint, 0644);
+
 static unsigned int touch_boost_active = 1;
 module_param(touch_boost_active, uint, 0644);
 
@@ -244,7 +247,7 @@ static void unplug_cpu(int min_active_cpu)
 		if (cpu == 0)
 			continue;
 		l_ip_info = &per_cpu(ip_info, cpu);
-		if (cpu > min_active_cpu)
+		if (cpu > min_active_cpu && cpu >= min_active_cores)
 			if (l_ip_info->cpu_nr_running < l_nr_threshold)
 				cpu_down(cpu);
 	}
