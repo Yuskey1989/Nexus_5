@@ -1161,6 +1161,8 @@ read_one(kgamma_3,   3);
 read_one(kgamma_5,   5);
 read_one(kgamma_20, 20);
 read_one(kgamma_22, 22);
+read_one(kgamma_28, 28);
+read_one(kgamma_31, 31);
 
 #define write_one(file_name, cmd)				\
 static ssize_t write_##file_name				\
@@ -1181,6 +1183,8 @@ write_one(kgamma_3,   3);
 write_one(kgamma_5,   5);
 write_one(kgamma_20, 20);
 write_one(kgamma_22, 22);
+write_one(kgamma_28, 28);
+write_one(kgamma_31, 31);
 
 #define define_one_rw(_name)					\
 static DEVICE_ATTR(_name, 0644, read_##_name, write_##_name);
@@ -1196,6 +1200,8 @@ define_one_rw(kgamma_3);
 define_one_rw(kgamma_5);
 define_one_rw(kgamma_20);
 define_one_rw(kgamma_22);
+define_one_rw(kgamma_28);
+define_one_rw(kgamma_31);
 
 static struct attribute *dsi_panel_attributes[] = {
 	&dev_attr_kgamma_rp.attr,
@@ -1209,6 +1215,8 @@ static struct attribute *dsi_panel_attributes[] = {
 	&dev_attr_kgamma_5.attr,
 	&dev_attr_kgamma_20.attr,
 	&dev_attr_kgamma_22.attr,
+	&dev_attr_kgamma_28.attr,
+	&dev_attr_kgamma_31.attr,
 	NULL
 };
 
