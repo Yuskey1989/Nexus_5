@@ -1927,65 +1927,6 @@ static inline void adjust_freq_thresholds(unsigned int step)
 #endif /* ENABLE_HOTPLUGGING */
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,4,0)
-static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
-{
-	u64 idle_time;
-	u64 cur_wall_time;
-	u64 busy_time;
-	cur_wall_time = jiffies64_to_cputime64(get_jiffies_64());
-	busy_time  = kcpustat_cpu(cpu).cpustat[CPUTIME_USER];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_SYSTEM];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_IRQ];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_SOFTIRQ];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_STEAL];
-	busy_time += kcpustat_cpu(cpu).cpustat[CPUTIME_NICE];
-
-	idle_time = cur_wall_time - busy_time;
-	if (wall)
-	*wall = jiffies_to_usecs(cur_wall_time);
-	return jiffies_to_usecs(idle_time);
-}
-#else
-static inline cputime64_t get_cpu_idle_time_jiffy(unsigned int cpu, cputime64_t *wall)
-{
-	cputime64_t idle_time;
-	cputime64_t cur_wall_time;
-	cputime64_t busy_time;
-
-	cur_wall_time = jiffies64_to_cputime64(get_jiffies_64());
-	busy_time = cputime64_add(kstat_cpu(cpu).cpustat.user,
-			kstat_cpu(cpu).cpustat.system);
-
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.irq);
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.softirq);
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.steal);
-	busy_time = cputime64_add(busy_time, kstat_cpu(cpu).cpustat.nice);
-
-	idle_time = cputime64_sub(cur_wall_time, busy_time);
-	if (wall)
-	    *wall = (cputime64_t)jiffies_to_usecs(cur_wall_time);
-
-	return (cputime64_t)jiffies_to_usecs(idle_time);
-}
-#endif
-
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,10,0) /* function has been moved to cpufreq.c in kernel version 3.10 */
-#ifndef CPU_IDLE_TIME_IN_CPUFREQ		 /* overrule for sources with backported cpufreq implementation */
-static inline cputime64_t get_cpu_idle_time(unsigned int cpu, cputime64_t *wall)
-{
-	u64 idle_time = get_cpu_idle_time_us(cpu, NULL);
-
-	if (idle_time == -1ULL)
-		return get_cpu_idle_time_jiffy(cpu, wall);
-	else
-		idle_time += get_cpu_iowait_time_us(cpu, wall);
-
-	return idle_time;
-}
-#endif
-#endif
-
 // keep track of frequency transitions
 static int dbs_cpufreq_notifier(struct notifier_block *nb, unsigned long val, void *data)
 {
@@ -2559,15 +2500,7 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b, co
 		 struct cpu_dbs_info_s *dbs_info;
 		 dbs_info = &per_cpu(cs_cpu_dbs_info, j);
 		 dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,10,0)
-#ifdef CPU_IDLE_TIME_IN_CPUFREQ			/* overrule for sources with backported cpufreq implementation */
 		 &dbs_info->prev_cpu_wall, 0);
-#else
-		 &dbs_info->prev_cpu_wall);
-#endif
-#else
-		 &dbs_info->prev_cpu_wall, 0);
-#endif
 		 if (dbs_tuners_ins.ignore_nice)
 		     dbs_info->prev_cpu_nice = kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 	}
@@ -2577,15 +2510,7 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b, co
 		struct cpu_dbs_info_s *dbs_info;
 		dbs_info = &per_cpu(cs_cpu_dbs_info, j);
 		dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,10,0)
-#ifdef CPU_IDLE_TIME_IN_CPUFREQ			/* overrule for sources with backported cpufreq implementation */
 		 &dbs_info->prev_cpu_wall, 0);
-#else
-		 &dbs_info->prev_cpu_wall);
-#endif
-#else
-		 &dbs_info->prev_cpu_wall, 0);
-#endif
 		if (dbs_tuners_ins.ignore_nice)
 		    dbs_info->prev_cpu_nice = kstat_cpu(j).cpustat.nice;
 
@@ -3848,15 +3773,7 @@ static inline int set_profile(int profile_num)
 		     struct cpu_dbs_info_s *dbs_info;
 		     dbs_info = &per_cpu(cs_cpu_dbs_info, j);
 		     dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,10,0)
-#ifdef CPU_IDLE_TIME_IN_CPUFREQ			/* overrule for sources with backported cpufreq implementation */
 		     &dbs_info->prev_cpu_wall, 0);
-#else
-		     &dbs_info->prev_cpu_wall);
-#endif
-#else
-		     &dbs_info->prev_cpu_wall, 0);
-#endif
 		 if (dbs_tuners_ins.ignore_nice)
 		     dbs_info->prev_cpu_nice = kcpustat_cpu(j).cpustat[CPUTIME_NICE];
 		 }
@@ -3865,15 +3782,7 @@ static inline int set_profile(int profile_num)
 		    struct cpu_dbs_info_s *dbs_info;
 		    dbs_info = &per_cpu(cs_cpu_dbs_info, j);
 		    dbs_info->prev_cpu_idle = get_cpu_idle_time(j, 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,10,0)
-#ifdef CPU_IDLE_TIME_IN_CPUFREQ			/* overrule for sources with backported cpufreq implementation */
 		     &dbs_info->prev_cpu_wall, 0);
-#else
-		     &dbs_info->prev_cpu_wall);
-#endif
-#else
-		     &dbs_info->prev_cpu_wall, 0);
-#endif
 		if (dbs_tuners_ins.ignore_nice)
 		    dbs_info->prev_cpu_nice = kstat_cpu(j).cpustat.nice;
 		}
@@ -4782,15 +4691,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		j_dbs_info = &per_cpu(cs_cpu_dbs_info, j);
 
 		cur_idle_time = get_cpu_idle_time(j,
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,10,0)
-#ifdef CPU_IDLE_TIME_IN_CPUFREQ			/* overrule for sources with backported cpufreq implementation */
 		     &cur_wall_time, 0);
-#else
-		     &cur_wall_time);
-#endif
-#else
-		     &cur_wall_time, 0);
-#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,4,0)
 		wall_time = (unsigned int)
 				(cur_wall_time - j_dbs_info->prev_cpu_wall);
@@ -5619,15 +5520,7 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			j_dbs_info->cur_policy = policy;
 
 			j_dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,10,0)
-#ifdef CPU_IDLE_TIME_IN_CPUFREQ			/* overrule for sources with backported cpufreq implementation */
 			&j_dbs_info->prev_cpu_wall, 0);
-#else
-			&j_dbs_info->prev_cpu_wall);
-#endif
-#else
-			&j_dbs_info->prev_cpu_wall, 0);
-#endif
 			if (dbs_tuners_ins.ignore_nice) {
 			    j_dbs_info->prev_cpu_nice =
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,4,0)
