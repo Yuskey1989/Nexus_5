@@ -355,6 +355,7 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
 KERNELFLAGS	= -O3 -munaligned-access -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -fsingle-precision-constant -mcpu=cortex-a15 -mtune=cortex-a15 -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -funroll-loops -fgraphite-identity -floop-interchange -floop-strip-mine -floop-block -floop-parallelize-all -floop-flatten -floop-nest-optimize
 KERNELFLAGS	+= -fpredictive-commoning -ftree-loop-linear
+KERNELFLAGS	+= -fgcse-las -ftree-loop-im -ftree-loop-ivcanon -fmodulo-sched -fmodulo-sched-allow-regmoves -fivopts -mneon-for-64bits -fopenmp -fopenmp-simd -fsimd-cost-model=unlimited -fgraphite
 MODFLAGS	= -DMODULE $(KERNELFLAGS)
 CFLAGS_MODULE   = -fno-pic $(MODFLAGS)
 AFLAGS_MODULE   = $(MODFLAGS)
