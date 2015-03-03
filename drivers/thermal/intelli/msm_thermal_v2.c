@@ -1415,10 +1415,10 @@ static __ref int do_freq_mitigation(void *data)
 			max_freq_req = (cpus[cpu].max_freq) ?
 					msm_thermal_info.freq_limit :
 					UINT_MAX;
-			max_freq_req = min(max_freq_req,
+			max_freq_req = max(max_freq_req,
 					cpus[cpu].user_max_freq);
 
-			min_freq_req = max(min_freq_limit,
+			min_freq_req = min(min_freq_limit,
 					cpus[cpu].user_min_freq);
 
 			if ((max_freq_req == cpus[cpu].limited_max_freq)
