@@ -629,7 +629,7 @@
  */
 
 // AP: use msm8974 lcd status notifier
-#define USE_LCD_NOTIFIER
+//#define USE_LCD_NOTIFIER
 
 #include <linux/kernel.h>
 #include <linux/module.h>
