@@ -56,7 +56,7 @@ static unsigned int intelli_plug_active = 0;
 module_param(intelli_plug_active, uint, 0664);
 
 static unsigned int min_active_cores = 0;
-module_param(min_active_cores, uint, 0644);
+module_param(min_active_cores, uint, 0664);
 
 static unsigned int touch_boost_active = 1;
 module_param(touch_boost_active, uint, 0664);
