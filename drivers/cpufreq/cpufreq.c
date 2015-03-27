@@ -173,11 +173,17 @@ static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
 u64 get_cpu_idle_time(unsigned int cpu, u64 *wall, int io_busy)
 {
 	u64 idle_time = get_cpu_idle_time_us(cpu, io_busy ? wall : NULL);
+	u64 iowait_time;
 
 	if (idle_time == -1ULL)
 		return get_cpu_idle_time_jiffy(cpu, wall);
 	else if (!io_busy)
 		idle_time += get_cpu_iowait_time_us(cpu, wall);
+	else if (io_busy >= 2) {
+		iowait_time = get_cpu_iowait_time_us(cpu, wall);
+		do_div(iowait_time, io_busy);
+		idle_time += iowait_time;
+	}
 
 	return idle_time;
 }
