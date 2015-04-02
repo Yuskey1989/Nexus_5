@@ -2020,7 +2020,6 @@ static void adreno_vbif_clear_pending_transactions(struct kgsl_device *device)
 	adreno_writereg(adreno_dev, ADRENO_REG_VBIF_XIN_HALT_CTRL0, 0);
 }
 
-
 static int adreno_stop(struct kgsl_device *device)
 {
 	struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
