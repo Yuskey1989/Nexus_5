@@ -374,6 +374,8 @@ int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
 			 */
 			if (reg & 0x2000)
 				return -EAGAIN;
+			else if (DWC3_DEPCMD_STATUS(reg))
+				return -EINVAL;
 			else
 				return 0;
 		}
