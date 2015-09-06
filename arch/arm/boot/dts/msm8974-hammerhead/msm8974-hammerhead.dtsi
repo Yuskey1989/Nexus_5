@@ -138,7 +138,17 @@
 	};
 
 	qcom,msm-thermal {
+		qcom,poll-ms = <250>;
 		qcom,limit-temp = <90>;
+		qcom,temp-hysteresis = <10>;
+		qcom,freq-step = <2>;
+		qcom,freq-control-mask = <0xf>;
+		qcom,core-limit-temp = <80>;
+		qcom,core-temp-hysteresis = <10>;
+		qcom,core-control-mask = <0xc>;
+		qcom,pmic-sw-mode-temp = <95>;
+		qcom,pmic-sw-mode-temp-hysteresis = <85>;
+		qcom,pmic-sw-mode-regs = "vdd_dig";
 	};
 
 	bluesleep {
