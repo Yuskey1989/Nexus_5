@@ -21,6 +21,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 
+#include "mdss_fb.h"
 #include "mdss_mdp.h"
 
 #define DEF_PCC 0x100
