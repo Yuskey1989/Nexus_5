@@ -20,7 +20,11 @@
 #include <linux/device.h>
 #include <linux/slab.h>
 #include <linux/cpufreq.h>
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#else
 #include <linux/lcd_notify.h>
+#endif
 #include <linux/input.h>
 #include <linux/math64.h>
 #include <linux/kernel_stat.h>
@@ -564,6 +568,23 @@ static void msm_hotplug_resume(struct work_struct *work)
 	dprintk("%s: Resuming cpus to %uMHz\n", MSM_HOTPLUG, max_freq / 1000);
 }
 
+#ifdef CONFIG_POWERSUSPEND
+static void __ref msm_hotplug_power_suspend(struct power_suspend *handler)
+{
+}
+
+static void __cpuinit msm_hotplug_late_resume(
+				struct power_suspend *handler)
+{
+	if (hotplug.enabled)
+		schedule_work(&hotplug.resume_work);
+}
+
+static struct power_suspend msm_hotplug_power_suspend_driver = {
+	.suspend = msm_hotplug_power_suspend,
+	.resume = msm_hotplug_late_resume,
+};
+#else
 static int lcd_notifier_callback(struct notifier_block *nb,
                                  unsigned long event, void *data)
 {
@@ -587,6 +608,7 @@ static int lcd_notifier_callback(struct notifier_block *nb,
 
 	return 0;
 }
+#endif
 
 static unsigned int *get_tokenized_data(const char *buf, int *num_tokens)
 {
@@ -1103,12 +1125,16 @@ static int __devinit msm_hotplug_probe(struct platform_device *pdev)
 		goto err_dev;
 	}
 
+#ifdef CONFIG_POWERSUSPEND
+	register_power_suspend(&msm_hotplug_power_suspend_driver);
+#else
 	hotplug.notif.notifier_call = lcd_notifier_callback;
         if (lcd_register_client(&hotplug.notif) != 0) {
                 pr_err("%s: Failed to register LCD notifier callback\n",
                        MSM_HOTPLUG);
 		goto err_dev;
 	}
+#endif
 
 	ret = input_register_handler(&hotplug_input_handler);
 	if (ret) {
@@ -1157,6 +1183,9 @@ static struct platform_device msm_hotplug_device = {
 static int msm_hotplug_remove(struct platform_device *pdev)
 {
 	destroy_workqueue(hotplug_wq);
+#ifdef CONFIG_POWERSUSPEND
+	unregister_power_suspend(&msm_hotplug_power_suspend_driver);
+#endif
 	input_unregister_handler(&hotplug_input_handler);
 	kfree(stats.load_hist);
 
