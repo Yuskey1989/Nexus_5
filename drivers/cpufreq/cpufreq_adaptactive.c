@@ -158,6 +158,9 @@ static unsigned int io_is_busy;
  */
 static bool plus_ondemand;
 
+/* Next frequency is overrided next to current frequency */
+static bool plus_conservative;
+
 /*
  * If the max load among other CPUs is higher than up_threshold_any_cpu_load
  * and if the highest frequency among the other CPUs is higher than
@@ -372,6 +375,22 @@ static unsigned int choose_freq(
 
 		/* If same frequency chosen as previous then done. */
 	} while (freq != prevfreq);
+
+	if (plus_conservative) {
+		if (freq > pcpu->policy->cur) {
+			cpufreq_frequency_table_target(
+				pcpu->policy, pcpu->freq_table,
+				pcpu->policy->cur + 1, CPUFREQ_RELATION_L,
+				&index);
+			freq = pcpu->freq_table[index].frequency;
+		} else if (freq < pcpu->policy->cur) {
+			cpufreq_frequency_table_target(
+				pcpu->policy, pcpu->freq_table,
+				pcpu->policy->cur - 1, CPUFREQ_RELATION_H,
+				&index);
+			freq = pcpu->freq_table[index].frequency;
+		}
+	}
 
 	return freq;
 }
@@ -1347,6 +1366,28 @@ static ssize_t store_plus_ondemand(struct kobject *kobj,
 static struct global_attr plus_ondemand_attr = __ATTR(plus_ondemand, 0644,
 		show_plus_ondemand, store_plus_ondemand);
 
+static ssize_t show_plus_conservative(struct kobject *kobj,
+			struct attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", plus_conservative);
+}
+
+static ssize_t store_plus_conservative(struct kobject *kobj,
+			struct attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	unsigned long val;
+
+	ret = kstrtoul(buf, 0, &val);
+	if (ret < 0)
+		return ret;
+	plus_conservative = val;
+	return count;
+}
+
+static struct global_attr plus_conservative_attr = __ATTR(plus_conservative, 0644,
+		show_plus_conservative, store_plus_conservative);
+
 static struct attribute *interactive_attributes[] = {
 	&target_loads_attr.attr,
 	&above_hispeed_delay_attr.attr,
@@ -1369,6 +1410,7 @@ static struct attribute *interactive_attributes[] = {
 	&up_threshold_any_cpu_load_attr.attr,
 	&up_threshold_any_cpu_freq_attr.attr,
 	&plus_ondemand_attr.attr,
+	&plus_conservative_attr.attr,
 	NULL,
 };
 
