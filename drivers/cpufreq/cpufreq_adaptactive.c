@@ -153,6 +153,12 @@ static unsigned int max_freq_hysteresis;
 static unsigned int io_is_busy;
 
 /*
+ * Go to max frequency when current frequency is above hispeed and
+ * current load exceeds hispeed load
+ */
+static bool plus_ondemand;
+
+/*
  * If the max load among other CPUs is higher than up_threshold_any_cpu_load
  * and if the highest frequency among the other CPUs is higher than
  * up_threshold_any_cpu_freq then do not let the frequency to drop below
@@ -446,6 +452,9 @@ static void cpufreq_interactive_timer(unsigned long data)
 			new_freq = this_hispeed_freq;
 		} else {
 			new_freq = choose_freq(pcpu, loadadjfreq);
+
+			if (plus_ondemand)
+				new_freq = pcpu->policy->max;
 
 			if (new_freq < this_hispeed_freq)
 				new_freq = this_hispeed_freq;
@@ -1316,6 +1325,28 @@ static struct global_attr up_threshold_any_cpu_freq_attr =
 		show_up_threshold_any_cpu_freq,
 				store_up_threshold_any_cpu_freq);
 
+static ssize_t show_plus_ondemand(struct kobject *kobj,
+			struct attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", plus_ondemand);
+}
+
+static ssize_t store_plus_ondemand(struct kobject *kobj,
+			struct attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	unsigned long val;
+
+	ret = kstrtoul(buf, 0, &val);
+	if (ret < 0)
+		return ret;
+	plus_ondemand = val;
+	return count;
+}
+
+static struct global_attr plus_ondemand_attr = __ATTR(plus_ondemand, 0644,
+		show_plus_ondemand, store_plus_ondemand);
+
 static struct attribute *interactive_attributes[] = {
 	&target_loads_attr.attr,
 	&above_hispeed_delay_attr.attr,
@@ -1337,6 +1368,7 @@ static struct attribute *interactive_attributes[] = {
 	&sync_freq_attr.attr,
 	&up_threshold_any_cpu_load_attr.attr,
 	&up_threshold_any_cpu_freq_attr.attr,
+	&plus_ondemand_attr.attr,
 	NULL,
 };
 
