@@ -482,7 +482,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 		boosted = false;
 		pcpu->max_freq_hyst_start_time -= max_freq_hysteresis;
 		input_boostpulse_endtime = now;
-		new_freq = pcpu->policy->cpuinfo.min_freq;
+		new_freq = pcpu->policy->min;
 	} else {
 		new_freq = choose_freq(pcpu, loadadjfreq);
 		if (new_freq > this_hispeed_freq &&
