@@ -154,9 +154,10 @@ static unsigned int io_is_busy;
 
 /*
  * Go to max frequency when current frequency is above hispeed and
- * current load exceeds hispeed load
+ * current load exceeds hispeed load continuing plus_ondemand times
  */
-static bool plus_ondemand;
+static unsigned int plus_ondemand;
+static unsigned int inter_staycycles;
 
 /*
  * Next frequency is overrided next to current frequency
@@ -475,8 +476,11 @@ static void cpufreq_interactive_timer(unsigned long data)
 		} else {
 			new_freq = choose_freq(pcpu, loadadjfreq);
 
-			if (plus_ondemand)
-				new_freq = pcpu->policy->max;
+			if (plus_ondemand) {
+				inter_staycycles++;
+				if (inter_staycycles >= plus_ondemand)
+					new_freq = pcpu->policy->max;
+			}
 
 			if (new_freq < this_hispeed_freq)
 				new_freq = this_hispeed_freq;
@@ -486,6 +490,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 		pcpu->max_freq_hyst_start_time -= max_freq_hysteresis;
 		input_boostpulse_endtime = now;
 		new_freq = pcpu->policy->min;
+		inter_staycycles = 0;
 	} else {
 		new_freq = choose_freq(pcpu, loadadjfreq);
 		if (new_freq > this_hispeed_freq &&
@@ -512,6 +517,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 				max_load >= up_threshold_any_cpu_load)
 				new_freq = sync_freq;
 		}
+		inter_staycycles = 0;
 	}
 
 	if (boosted) {
