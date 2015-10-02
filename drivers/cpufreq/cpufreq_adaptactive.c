@@ -158,8 +158,11 @@ static unsigned int io_is_busy;
  */
 static bool plus_ondemand;
 
-/* Next frequency is overrided next to current frequency */
-static bool plus_conservative;
+/*
+ * Next frequency is overrided next to current frequency
+ * This value is shared with step frequency
+ */
+static unsigned int plus_conservative;
 
 /*
  * If the max load among other CPUs is higher than up_threshold_any_cpu_load
@@ -380,13 +383,13 @@ static unsigned int choose_freq(
 		if (freq > pcpu->policy->cur) {
 			cpufreq_frequency_table_target(
 				pcpu->policy, pcpu->freq_table,
-				pcpu->policy->cur + 1, CPUFREQ_RELATION_L,
+				pcpu->policy->cur + plus_conservative, CPUFREQ_RELATION_L,
 				&index);
 			freq = pcpu->freq_table[index].frequency;
 		} else if (freq < pcpu->policy->cur) {
 			cpufreq_frequency_table_target(
 				pcpu->policy, pcpu->freq_table,
-				pcpu->policy->cur - 1, CPUFREQ_RELATION_H,
+				pcpu->policy->cur - plus_conservative, CPUFREQ_RELATION_H,
 				&index);
 			freq = pcpu->freq_table[index].frequency;
 		}
