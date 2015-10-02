@@ -382,17 +382,21 @@ static unsigned int choose_freq(
 
 	if (plus_conservative) {
 		if (freq > pcpu->policy->cur) {
-			cpufreq_frequency_table_target(
-				pcpu->policy, pcpu->freq_table,
-				pcpu->policy->cur + plus_conservative, CPUFREQ_RELATION_L,
-				&index);
-			freq = pcpu->freq_table[index].frequency;
+			if (cpufreq_frequency_table_target(
+				    pcpu->policy, pcpu->freq_table,
+				    pcpu->policy->cur + plus_conservative,
+				    CPUFREQ_RELATION_L, &index))
+				freq = pcpu->policy->max;
+			else
+				freq = pcpu->freq_table[index].frequency;
 		} else if (freq < pcpu->policy->cur) {
-			cpufreq_frequency_table_target(
-				pcpu->policy, pcpu->freq_table,
-				pcpu->policy->cur - plus_conservative, CPUFREQ_RELATION_H,
-				&index);
-			freq = pcpu->freq_table[index].frequency;
+			if (cpufreq_frequency_table_target(
+				    pcpu->policy, pcpu->freq_table,
+				    pcpu->policy->cur - plus_conservative,
+				    CPUFREQ_RELATION_H, &index))
+				freq = pcpu->policy->min;
+			else
+				freq = pcpu->freq_table[index].frequency;
 		}
 	}
 
