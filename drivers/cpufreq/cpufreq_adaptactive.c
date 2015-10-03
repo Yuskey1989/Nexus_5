@@ -163,7 +163,7 @@ static unsigned int inter_staycycles;
  * When below the hispeed_freq we always ramp up to the hispeed_freq.
  * When above the hispeed_freq we always ramp down to the hispeed_freq.
  */
-static bool plus_smart;
+static unsigned int plus_smart;
 
 /*
  * Freqeuncy delta when ramping up.
@@ -395,8 +395,17 @@ static unsigned int choose_freq(
 	} while (freq != prevfreq);
 
 	if (plus_smart) {
-		if (((freq > pcpu->policy->cur) && (pcpu->policy->cur < hispeed_freq)) ||
-		    ((freq < pcpu->policy->cur) && (pcpu->policy->cur > hispeed_freq))) {
+		/* When ramp down only */
+		if ((plus_smart > 1) &&
+		    (freq < pcpu->policy->cur) && (pcpu->policy->cur > hispeed_freq)) {
+			freq = hispeed_freq;
+			return freq;
+		}
+
+		/* When ramp up and down */
+		if ((plus_smart == 1) &&
+		    (((freq > pcpu->policy->cur) && (pcpu->policy->cur < hispeed_freq)) ||
+		    ((freq < pcpu->policy->cur) && (pcpu->policy->cur > hispeed_freq)))) {
 			freq = hispeed_freq;
 			return freq;
 		}
