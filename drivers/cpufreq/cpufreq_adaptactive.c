@@ -160,6 +160,12 @@ static unsigned int plus_ondemand;
 static unsigned int inter_staycycles;
 
 /*
+ * When below the hispeed_freq we always ramp up to the hispeed_freq.
+ * When above the hispeed_freq we always ramp down to the hispeed_freq.
+ */
+static bool plus_smart;
+
+/*
  * Freqeuncy delta when ramping up.
  * Zero disables and will calculate ramp up according to load heuristic.
  * (The load heuristic calculation is the original interactive works.)
@@ -387,6 +393,14 @@ static unsigned int choose_freq(
 
 		/* If same frequency chosen as previous then done. */
 	} while (freq != prevfreq);
+
+	if (plus_smart) {
+		if (((freq > pcpu->policy->cur) && (pcpu->policy->cur < hispeed_freq)) ||
+		    ((freq < pcpu->policy->cur) && (pcpu->policy->cur > hispeed_freq))) {
+			freq = hispeed_freq;
+			return freq;
+		}
+	}
 
 	if (ramp_up_step && (freq > pcpu->policy->cur)) {
 		if (cpufreq_frequency_table_target(
@@ -1385,6 +1399,28 @@ static ssize_t store_plus_ondemand(struct kobject *kobj,
 static struct global_attr plus_ondemand_attr = __ATTR(plus_ondemand, 0644,
 		show_plus_ondemand, store_plus_ondemand);
 
+static ssize_t show_plus_smart(struct kobject *kobj,
+			struct attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", plus_smart);
+}
+
+static ssize_t store_plus_smart(struct kobject *kobj,
+			struct attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	unsigned long val;
+
+	ret = kstrtoul(buf, 0, &val);
+	if (ret < 0)
+		return ret;
+	plus_smart = val;
+	return count;
+}
+
+static struct global_attr plus_smart_attr = __ATTR(plus_smart, 0644,
+		show_plus_smart, store_plus_smart);
+
 static ssize_t show_ramp_up_step(struct kobject *kobj,
 			struct attribute *attr, char *buf)
 {
@@ -1451,6 +1487,7 @@ static struct attribute *interactive_attributes[] = {
 	&up_threshold_any_cpu_load_attr.attr,
 	&up_threshold_any_cpu_freq_attr.attr,
 	&plus_ondemand_attr.attr,
+	&plus_smart_attr.attr,
 	&ramp_up_step_attr.attr,
 	&ramp_down_step_attr.attr,
 	NULL,
