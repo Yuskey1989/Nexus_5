@@ -160,10 +160,18 @@ static unsigned int plus_ondemand;
 static unsigned int inter_staycycles;
 
 /*
- * Next frequency is overrided next to current frequency
- * This value is shared with step frequency
+ * Freqeuncy delta when ramping up.
+ * Zero disables and will calculate ramp up according to load heuristic.
+ * (The load heuristic calculation is the original interactive works.)
  */
-static unsigned int plus_conservative;
+static unsigned int ramp_up_step;
+
+/*
+ * Freqeuncy delta when ramping down.
+ * Zero disables and will calculate ramp down according to load heuristic.
+ * (The load heuristic calculation is the original interactive works.)
+ */
+static unsigned int ramp_down_step;
 
 /*
  * If the max load among other CPUs is higher than up_threshold_any_cpu_load
@@ -380,24 +388,22 @@ static unsigned int choose_freq(
 		/* If same frequency chosen as previous then done. */
 	} while (freq != prevfreq);
 
-	if (plus_conservative) {
-		if (freq > pcpu->policy->cur) {
-			if (cpufreq_frequency_table_target(
-				    pcpu->policy, pcpu->freq_table,
-				    pcpu->policy->cur + plus_conservative,
-				    CPUFREQ_RELATION_L, &index))
-				freq = pcpu->policy->max;
-			else
-				freq = pcpu->freq_table[index].frequency;
-		} else if (freq < pcpu->policy->cur) {
-			if (cpufreq_frequency_table_target(
-				    pcpu->policy, pcpu->freq_table,
-				    pcpu->policy->cur - plus_conservative,
-				    CPUFREQ_RELATION_H, &index))
-				freq = pcpu->policy->min;
-			else
-				freq = pcpu->freq_table[index].frequency;
-		}
+	if (ramp_up_step && (freq > pcpu->policy->cur)) {
+		if (cpufreq_frequency_table_target(
+			    pcpu->policy, pcpu->freq_table,
+			    pcpu->policy->cur + ramp_up_step,
+			    CPUFREQ_RELATION_L, &index))
+			freq = pcpu->policy->max;
+		else
+			freq = pcpu->freq_table[index].frequency;
+	} else if (ramp_down_step && (freq < pcpu->policy->cur)) {
+		if (cpufreq_frequency_table_target(
+			    pcpu->policy, pcpu->freq_table,
+			    pcpu->policy->cur - ramp_down_step,
+			    CPUFREQ_RELATION_H, &index))
+			freq = pcpu->policy->min;
+		else
+			freq = pcpu->freq_table[index].frequency;
 	}
 
 	return freq;
@@ -1379,13 +1385,13 @@ static ssize_t store_plus_ondemand(struct kobject *kobj,
 static struct global_attr plus_ondemand_attr = __ATTR(plus_ondemand, 0644,
 		show_plus_ondemand, store_plus_ondemand);
 
-static ssize_t show_plus_conservative(struct kobject *kobj,
+static ssize_t show_ramp_up_step(struct kobject *kobj,
 			struct attribute *attr, char *buf)
 {
-	return sprintf(buf, "%u\n", plus_conservative);
+	return sprintf(buf, "%u\n", ramp_up_step);
 }
 
-static ssize_t store_plus_conservative(struct kobject *kobj,
+static ssize_t store_ramp_up_step(struct kobject *kobj,
 			struct attribute *attr, const char *buf, size_t count)
 {
 	int ret;
@@ -1394,12 +1400,34 @@ static ssize_t store_plus_conservative(struct kobject *kobj,
 	ret = kstrtoul(buf, 0, &val);
 	if (ret < 0)
 		return ret;
-	plus_conservative = val;
+	ramp_up_step = val;
 	return count;
 }
 
-static struct global_attr plus_conservative_attr = __ATTR(plus_conservative, 0644,
-		show_plus_conservative, store_plus_conservative);
+static struct global_attr ramp_up_step_attr = __ATTR(ramp_up_step, 0644,
+		show_ramp_up_step, store_ramp_up_step);
+
+static ssize_t show_ramp_down_step(struct kobject *kobj,
+			struct attribute *attr, char *buf)
+{
+	return sprintf(buf, "%u\n", ramp_down_step);
+}
+
+static ssize_t store_ramp_down_step(struct kobject *kobj,
+			struct attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	unsigned long val;
+
+	ret = kstrtoul(buf, 0, &val);
+	if (ret < 0)
+		return ret;
+	ramp_down_step = val;
+	return count;
+}
+
+static struct global_attr ramp_down_step_attr = __ATTR(ramp_down_step, 0644,
+		show_ramp_down_step, store_ramp_down_step);
 
 static struct attribute *interactive_attributes[] = {
 	&target_loads_attr.attr,
@@ -1423,7 +1451,8 @@ static struct attribute *interactive_attributes[] = {
 	&up_threshold_any_cpu_load_attr.attr,
 	&up_threshold_any_cpu_freq_attr.attr,
 	&plus_ondemand_attr.attr,
-	&plus_conservative_attr.attr,
+	&ramp_up_step_attr.attr,
+	&ramp_down_step_attr.attr,
 	NULL,
 };
 
