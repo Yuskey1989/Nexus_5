@@ -3650,6 +3650,7 @@ static int binder_proc_show(struct seq_file *m, void *unused)
 		seq_puts(m, "binder proc state:\n");
 		print_binder_proc(m, proc, 1);
 	}
+
 	if (do_lock)
 		binder_unlock(__func__);
 	return 0;
