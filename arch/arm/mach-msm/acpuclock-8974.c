@@ -915,7 +915,7 @@ static struct acpu_level acpu_freq_tbl_2p3g_pvs4[] __initdata = {
 	{ 1, { 2572800, HFPLL, 1, 134 }, L2(20), 1060000, 827 },
 #ifdef CONFIG_OC_ULTIMATE
 	{ 1, { 2726400, HFPLL, 1, 142 }, L2(21), 1090000, 900 },
-	{ 1, { 2803200, HFPLL, 1, 146 }, L2(21), 1115000, 937 },
+	{ 1, { 2803200, HFPLL, 1, 146 }, L2(21), 1105000, 937 },
 #endif
 #endif	
 	{ 0, { 0 } }
