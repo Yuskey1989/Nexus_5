@@ -426,7 +426,7 @@ static unsigned int choose_freq(
 		else
 			freq = pcpu->freq_table[index].frequency;
 
-		if (freq == pcpu->policy->cur) {
+		if (freq <= pcpu->policy->cur) {
 			if (cpufreq_frequency_table_target(
 				    pcpu->policy, pcpu->freq_table,
 				    pcpu->policy->cur + ramp_up_step,
@@ -453,7 +453,7 @@ static unsigned int choose_freq(
 		else
 			freq = pcpu->freq_table[index].frequency;
 
-		if (freq == pcpu->policy->cur) {
+		if (freq >= pcpu->policy->cur) {
 			if (cpufreq_frequency_table_target(
 				    pcpu->policy, pcpu->freq_table,
 				    pcpu->policy->cur - ramp_down_step,
