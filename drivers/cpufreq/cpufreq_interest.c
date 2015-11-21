@@ -436,19 +436,14 @@ static unsigned int choose_freq(
 				freq = pcpu->freq_table[index].frequency;
 		}
 	} else if (ramp_down_step && (freq < pcpu->policy->cur)) {
+		if (cpufreq_frequency_table_target(
+			    pcpu->policy, pcpu->freq_table,
+			    pcpu->policy->cur - ramp_down_step,
 #if CPUFREQ_RELATION_C == CPUFREQ_RELATION_L
-		if (cpufreq_frequency_table_target(
-			    pcpu->policy, pcpu->freq_table,
-			    pcpu->policy->cur - ramp_down_step,
 			    CPUFREQ_RELATION_H, &index))
-			return freq;
-		else
-			freq = pcpu->freq_table[index].frequency;
 #else
-		if (cpufreq_frequency_table_target(
-			    pcpu->policy, pcpu->freq_table,
-			    pcpu->policy->cur - ramp_down_step,
 			    CPUFREQ_RELATION_C, &index))
+#endif
 			return freq;
 		else
 			freq = pcpu->freq_table[index].frequency;
@@ -462,7 +457,6 @@ static unsigned int choose_freq(
 			else
 				freq = pcpu->freq_table[index].frequency;
 		}
-#endif
 	}
 
 	return freq;
