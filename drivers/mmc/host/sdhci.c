@@ -718,6 +718,12 @@ static u8 sdhci_calc_timeout(struct sdhci_host *host, struct mmc_command *cmd)
 	if (host->quirks & SDHCI_QUIRK_BROKEN_TIMEOUT_VAL)
 		return 0xE;
 
+	/* During initialization, don't use max timeout as the clock is slow */
+	if ((host->quirks2 & SDHCI_QUIRK2_USE_RESERVED_MAX_TIMEOUT) &&
+		(host->clock > 400000)) {
+		return 0xF;
+	}
+
 	/* Unspecified timeout, assume max */
 	if (!data && !cmd->cmd_timeout_ms)
 		return 0xE;
@@ -2151,10 +2157,13 @@ static int sdhci_stop_request(struct mmc_host *mmc)
 	struct sdhci_host *host = mmc_priv(mmc);
 	unsigned long flags;
 	struct mmc_data *data;
+	int ret = 0;
 
 	spin_lock_irqsave(&host->lock, flags);
-	if (!host->mrq || !host->data)
+	if (!host->mrq || !host->data) {
+		ret = MMC_BLK_NO_REQ_TO_STOP;
 		goto out;
+	}
 
 	data = host->data;
 
@@ -2180,7 +2189,7 @@ static int sdhci_stop_request(struct mmc_host *mmc)
 	host->data = NULL;
 out:
 	spin_unlock_irqrestore(&host->lock, flags);
-	return 0;
+	return ret;
 }
 
 static unsigned int sdhci_get_xfer_remain(struct mmc_host *mmc)
