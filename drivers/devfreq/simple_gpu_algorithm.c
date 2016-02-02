@@ -40,6 +40,8 @@ int simple_gpu_algorithm(int level, struct devfreq *devfreq,
 		else if ((level > 0) &&
 			(level <= (devfreq->profile->max_state - 1)))
 			val = -1; /* bump up to next pwrlevel */
+		/* reset laziness count */
+		laziness = default_laziness;
 	/* idle case */
 	} else {
 		if ((level >= 0) &&
