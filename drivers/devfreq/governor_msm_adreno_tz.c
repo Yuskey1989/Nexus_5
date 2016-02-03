@@ -78,7 +78,7 @@ static int __secure_tz_entry3(u32 cmd, u32 val1, u32 val2, u32 val3)
 
 #ifdef CONFIG_SIMPLE_GPU_ALGORITHM
 extern int simple_gpu_active;
-extern int simple_gpu_algorithm(int level,
+extern int simple_gpu_algorithm(int level, struct devfreq *devfreq,
 				struct devfreq_msm_adreno_tz_data *priv);
 #endif
 
@@ -139,7 +139,7 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq,
 	} else {
 #ifdef CONFIG_SIMPLE_GPU_ALGORITHM
 		if (simple_gpu_active != 0)
-			val = simple_gpu_algorithm(level, priv);
+			val = simple_gpu_algorithm(level, devfreq, priv);
 		else
 			val = __secure_tz_entry3(TZ_UPDATE_ID,
 					level,
