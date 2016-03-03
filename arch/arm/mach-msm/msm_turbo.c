@@ -3,7 +3,9 @@
  * MSM architecture cpufreq turbo boost driver
  *
  * Copyright (c) 2012-2014, Paul Reioux. All rights reserved.
+ * Copyright (c) 2016, Yusuke Fukutsuka. All rights reserved.
  * Author: Paul Reioux <reioux@gmail.com>
+ * Author: Yusuke Fukutsuka <donsuke.f@gmail.com>
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -24,11 +26,18 @@
 #define STOCK_CPU_MAX_SPEED    2265600
 #endif
 
+static bool msm_turbo_enabled = true;
+module_param_named(enabled, msm_turbo_enabled, bool, 0664);
+static int core_threshold = 2;
+module_param_named(core_threshold, core_threshold, int, 0664);
+static int non_turbo_freq = STOCK_CPU_MAX_SPEED;
+module_param_named(non_turbo_freq, non_turbo_freq, int, 0664);
+
 int msm_turbo(int cpufreq)
 {
-	if (num_online_cpus() > 2) {
-		if (cpufreq > STOCK_CPU_MAX_SPEED)
-			cpufreq = STOCK_CPU_MAX_SPEED;
+	if (msm_turbo_enabled && num_online_cpus() > core_threshold) {
+		if (cpufreq > non_turbo_freq)
+			cpufreq = non_turbo_freq;
         }
 	return cpufreq;
 }
@@ -48,5 +57,6 @@ module_exit(msm_turbo_boost_exit);
 
 MODULE_LICENSE("GPL V2");
 MODULE_AUTHOR("Paul Reioux <reioux@gmail.com>");
+MODULE_AUTHOR("Yusuke Fukutsuka <donsuke.f@gmail.com>");
 MODULE_DESCRIPTION("MSM turbo boost module");
 
