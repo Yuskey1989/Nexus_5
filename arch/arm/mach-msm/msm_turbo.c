@@ -26,7 +26,7 @@
 #define STOCK_CPU_MAX_SPEED    2265600
 #endif
 
-static bool msm_turbo_enabled = true;
+static bool msm_turbo_enabled = false;
 module_param_named(enabled, msm_turbo_enabled, bool, 0664);
 static int core_threshold = 2;
 module_param_named(core_threshold, core_threshold, int, 0664);
