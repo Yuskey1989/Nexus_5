@@ -571,6 +571,8 @@ static void msm_hotplug_resume(struct work_struct *work)
 #ifdef CONFIG_POWERSUSPEND
 static void __ref msm_hotplug_power_suspend(struct power_suspend *handler)
 {
+	if (hotplug.enabled)
+		schedule_work(&hotplug.suspend_work);
 }
 
 static void __cpuinit msm_hotplug_late_resume(
