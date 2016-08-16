@@ -249,7 +249,8 @@ static int alloc_mem(struct fastrpc_buf *buf)
 		if (err)
 			goto bail;
 	} else {
-		VERIFY(err, 0 != (sg = ion_sg_table(clnt, buf->handle)));
+		sg = ion_sg_table(clnt, buf->handle);
+		VERIFY(err, 0 == IS_ERR_OR_NULL(sg));
 		if (err)
 			goto bail;
 		VERIFY(err, 1 == sg->nents);
